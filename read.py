@@ -77,4 +77,4 @@ def read_data_from_txt(file, POT=True, ESP=True, VEL=True, Z=False, SIG=False, M
             point_data.append(obs)
 
     #POT, x, y, {z,} tempo, temperatura
-    return np.array(data).astype(np.float32)
+    return np.array(data) # .astype(np.float32)

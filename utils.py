@@ -58,6 +58,9 @@ def save_data(file):
     df = pd.DataFrame(data, columns=['POT', 'ESP', 'VEL', 'SIG', 'MAT',
                                      'Z','X', 'Y', 'TEMPO', 'TEMPERATURA'])
 
+    float_columns = ['POT', 'ESP', 'VEL', 'SIG', 'Z', 'X', 'Y', 'TEMPO', 'TEMPERATURA']
+    df[float_columns] = df[float_columns].astype(np.float32)
+
     df.to_sql('simulacao_temp', engine, schema='simulacao',
               if_exists='append', index=False)
     
