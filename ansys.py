@@ -1,11 +1,10 @@
 import subprocess
 
 # Caminho para o executável do ANSYS APDL
-ANSYS_EXE_PATH = 'C:\\Program Files\\ANSYS Inc\\v241\\ANSYS\\bin\\winx64\\ANSYS241.exe'
-WORK_DIR = 'C:\\Users\\Workstation\\Documents\\Teste'
+ANSYS_EXE_PATH = 'especifique o path do executável do ansys apdl'
+WORK_DIR = 'especifique o path do diretorio de trabalho'
 
 def rodar_ansys_apdl(input_file, output_file='temp.txt'):
-    working_directory = 'C:\\Users\\Workstation\\Documents\\Teste'
     job_name = input_file[4:-3]
     
     # Comando para executar o ANSYS em modo batch
