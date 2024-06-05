@@ -1,0 +1,242 @@
+! Universidade Federal de Uberlandia
+! LAPROSOLDA 
+! Douglas Bezerra de Araújo
+! 08 DE MAIO de 2024
+!==========================================================================
+! DISTRIBUIÇÃO GAUSSIANA DE CALOR 
+!==========================================================================
+/config, nres, 500000			
+/FILNAM, FONTE GAUSSIANA 
+/COM, Thermal 				 
+!==========================================================================
+comp=0.2					! Comprimento da Chapa [m]
+larg=0.05					! Largura da Chapa [m]
+esp=0.0064					! Espessura da Chapa [m]
+tame=0.0005					! Tamanho dos elementos [m]
+np=(comp/tame)-0.01/tame			! N° de nós por onde passa a solda 
+pot=1200					! Potencia de soldagem [W]
+velSol=20					! Velocidade de Soldagem [cm/min]
+sig=0.001					! Valor de Sigma [mm] (Gaussiana)
+EMISS=0.85					! Valor de emissividade
+hconv=15					! Valor do coeficiente de convecção
+tamb=25						! Temperatura ambiente
+pi=3.1415					! Valor de pi
+vel=velSol/6000					! Velocidade de Soldagem [mm/s]
+dt=tame/vel					! dt=ds/v
+!===============================================================================
+/PREP7  
+ET,1,SOLID70					! Elemento solid70 termico
+ET,2,SURF152,,,,1,1     			! 3-D THERMAL SURFACE EFFECT ELEMENTS
+KEYOPT,2,8,2 					! Evaluate film coefficient hf (if any) at average film temperature, (TS +TB)/2
+KEYOPT,2,9,1            			! RADIATION OPTION
+R,2,1,5.67E-8           			! FORM FACTOR = 1, STEFAN-BOLTZMANN CONSTANT
+MP,EMIS,2,EMISS         			! Emissividade do material
+!===============================================================================
+!			   PROPRIEDADES DO MATERIAL
+!===============================================================================  
+MPREAD,'A36','mp'			! Importa propriedades do material
+!===============================================================================
+!			             GEOMETRIA
+!===============================================================================
+BLC4,0,0,0.01,esp  				! Cria um retangulo
+BLC4,0.01,0,0.0005,esp
+BLC4,0.0105,0,larg-0.0105,esp
+VOFFST,1,comp					! Extruda o retangulo
+VOFFST,2,comp
+VOFFST,3,comp
+VGLUE,ALL					! Cola todos os volumes
+!===============================================================================
+!				    MALHA
+!===============================================================================
+/VIEW,1,1,1,1	
+TYPE,1					! Seleciona o elemento tipo 1
+ESIZE,tame					! Especifica o tamanho do elemento
+MSHKEY,1					! Malha mapeada (0 - malha livre, 1 - malha mapeada)
+VSEL,S,LOC,X,0,0.01			! Seleciona o volume de x=0 ate 0,01
+VMESH,ALL					! Cria a malha no volume
+VSEL,ALL					! Seleciona todos os volumes
+ESIZE,0.001					! Especifica o tamanho do elemento
+VSEL,S,LOC,X,0.0105,larg		! Seleciona o volume de x=0,01 ate larg
+VSWEEP,ALL					! Cria malha do tipo Sweep
+VSEL,ALL					! Seleciona todos os volumes
+MSHAPE,1,3D
+MSHKEY,0
+VSEL,S,LOC,X,0.01,0.0105
+VMESH,ALL
+
+TYPE,2					! Seleciona o elemento tipo 2
+REAL,2					! Seleciona a costante tipo 2
+MAT,2						! Seleciona o material tipo 2
+N,1000000,0,0.1,.05        	 	! Nó extra na posição (0, 0.1, 0.05)
+ASEL,S,LOC,X,0.0001,larg
+ASEL,R,EXT
+NSLA,R,1
+ESURF,1000000     		 	! GENERATE SURF152 ELEMENTS
+STEF,5.67E-08				! Constante de Bolzman  
+TOFFST,273					! Temperatura do zero absoluto até a temperatura usada 
+RADOPT,,0.00001,0,1000,0.1,0.1	! Parâmetros de calculo radiação (Gauss-Seidel)
+SPCTEMP,1,25				! Define a temperatura ambiente para radiação
+NSEL,ALL 					! Seleciona todos as nós
+!===============================================================================
+FINISH  
+/SOL						! Solução			
+ANTYPE,4					! Transiente			
+TRNOPT,FULL 				! Opção de solução (FULL)
+TUNIF,tamb 					! Atribui a temperatura ambiente em todos os nós
+D,1000000,TEMP,tamb			! Atribui temperatura ambiente ao nós da radiação
+OUTRES,NSOL,ALL			 	! Salva os no-solution em todos os steps 
+SOLCONTROL,ON,0
+!===========================
+ASEL,S,LOC,X,0.0001,larg		! Seleciona as areas com 0.0001<x<larg
+ASEL,R,EXT					! Re-Seleciona as areas externas
+SFA,ALL,1,CONV,hconv,tamb		! Aplica convecção nas areas selecionadas
+!===========================
+!===========================
+ASEL,ALL
+VSEL,ALL
+TIME,0  
+AUTOTS,-1   
+DELTIM,0.005,0.001,1  			! Passo de tempo de solução	
+KBC,1						! Aplicação da condição de contorno STEP
+!=================================================================================
+!============================ Normalizando o calor imposto =======================
+!================================================================================= 
+soma=0
+LOCAL,11,1,0,esp,(5*tame)+0.005,,90		! Coordenada cilindrica(1) local (x=0,y=esp) 	
+ESEL,S,CENT,X,0,0.005				! Seleciona os elementos num raio re
+NSLE,ALL						! Seleciona os nos pertencentes aos elementos selecionados
+CSDELE,10,20,1					! Apaga as coordenadas locais entre 10 e 20
+CSYS,0						! Coordenas cartesianas
+NSEL,R,LOC,Y,esp-0.0001,esp+0.0001		! Reseleciona os nós entre zi e esp
+*GET,NS,NODE,,COUNT				! Contabiliza os nós selecionados
+*GET,AA,NODE,,NUM,MIN				! Registra em AA o nó com o menor número
+*DO,x,1,NS				
+	*GET,POSX,NODE,AA,LOC,X			! Pega a posição x do nó
+	*GET,POSZ,NODE,AA,LOC,Z			! Pega a posição z do nó
+	X=ABS(POSX-0)				! Calcula a distancia do nó a x=0
+	Z=ABS(POSZ-((5*tame)+0.005))		! Calcula a distancia do nó a z
+	XX=(X)**2					! Calcula x^2
+	YY=(Z)**2					! Calcula z^2
+	Qqq=1/(2*pi*sig*sig)*exp(-(XX+YY)/(2*sig*sig))	
+	soma=soma+Qqq				! Soma os valores da fonte
+	*GET,AA,NODE,AA,NXTH			! AA asume valores do próximo número do nó
+*ENDDO
+ALLSEL,ALL						! Seleciona tudo
+!==================================================================================
+!==================================================================================
+SQ=0
+passo=1
+*DO,v,1,np,1					! Loop da progressão da Fonte
+	
+	!=================================================================================
+	!=============================Delimitar a Região Cilindrica===========================
+	!=================================================================================
+	LOCAL,12,1,0,esp,(v*tame)+0.005,,90	! Cria uma coordenada local cilindrica	
+	ESEL,S,CENT,X,0,0.005			! Seleciona os elementos com raio de 0 a re
+	NSLE,ALL					! Seleciona os nós dos elementos
+	CSDELE,10,20,1				! Apaga as coordenadas locais
+	CSYS,0					! Coordenadas cartasianas
+	NSEL,R,LOC,Y,esp-0.0001,esp+0.0001
+	*GET,NS,NODE,,COUNT		
+	*GET,AA,NODE,,NUM,MIN		
+	!=================================================================================
+	!==================================================================================
+	*DO,x,1,NS
+		*GET,POSX,NODE,AA,LOC,X
+		*GET,POSZ,NODE,AA,LOC,Z
+		X=ABS(POSX-0)
+		Z=ABS(POSZ-((v*tame)+0.005))
+		XX=(X)**2
+		YY=(Z)**2
+		Qqq=((pot/2)/(2*pi*sig*sig)*exp(-(XX+YY)/(2*sig*sig)))/soma
+		F,AA,HEAT,Qqq
+		SQ=SQ+Qqq		
+		*GET,AA,NODE,AA,NXTH	
+	*ENDDO
+	!================================================================================
+	ALLSEL,ALL				! Seleciona tudo
+	passo=v				! Passo recebe v
+	TIME,passo*dt			! Tempo
+	OUTRES,NSOL,ALL			! Salva resultados nodais
+	OUTRES,ESOL,ALL
+	OUTRES,ALL
+	OUTPR,ALL	
+	SAVE					! Salva
+	SOLVE					! Resolve
+	FDELE,all,HEAT			! Apaga todos fluxos de calor
+	passo=passo+1			! Incrementa passo
+*ENDDO
+!============================================================================
+TIME,500					! Tempo de resfriamento
+OUTRES,NSOL,ALL				! Salva todos os substeps
+DELTIM,2,0.05,2				! Passo de tempo resfriamento
+SOLVE						! Calcula
+/POST1					! Entra no pos-processamento
+PLNSOL,TEMP					! Plota perfil de temperatura
+/CONT,1,18,20,30,1450			! Intervalo de temperatura entre 20 e 1450
+!============================================================================
+/POST26
+*GET,ST,ACTIVE,0,SET,LSTP		! Atribui ST numeros de steps
+*GET,SS,ACTIVE,0,SET,SBST		! Atribui SS números de substeps
+PARSAV,SCALAR,PARAMETROS		! Salva parametros escalares
+/POST1  
+SET,LAST
+FINISH
+/POST26
+NUMVAR,200
+*DEL,B
+ALLSEL,ALL
+*GET,TNNUM,NODE,,COUNT
+*GET,ST,ACTIVE,0,SET,LSTP                                            
+*GET,SS,ACTIVE,0,SET,SBST 
+NSEL,S,LOC,Z,0.1-0.0001,0.1+0.0001
+NSEL,R,LOC,Y,0,2*esp
+NSEL,R,LOC,X,0,0.01
+*GET,NNUM,NODE,,COUNT
+*GET,AA,NODE,,NUM,MIN
+*DIM,B,TABLE,SS+ST-1,2
+
+*CREATE,scratch,gui
+/OUTPUT,'Saida_DADOS','txt','SAVE_PATH'
+*VWRITE,'DADOS GERADOS PELO LAPROSOLDA'
+%29S
+*VWRITE,'AUTOR: DOUGLAS B ARAUJO'
+%23S
+*VWRITE,'MAT=','A36'
+%5S %8S
+*VWRITE,'COMP=',COMP
+%5S %8F 
+*VWRITE,'LARG=',larg
+%5S %8F
+*VWRITE,'ESP=',esp
+%5S %8F
+*VWRITE,'POT=',POT
+%5S %8I
+*VWRITE,'VEL=',vel
+%5S %8F
+*VWRITE,'SIG=',sig
+%5S %8F
+*VWRITE,'TNNO=',TNNUM
+%5S %8I
+*VWRITE,'NNO=',NNUM
+%5S %8I
+/OUTPUT,TERM
+
+ *DO,k,1,NNUM     
+  	*GET,XXX,NODE,AA,LOC,X
+    	*GET,YYY,NODE,AA,LOC,Y
+     	*GET,ZZZ,NODE,AA,LOC,Z
+    	NSOL,2,AA,TEMP,,TEMP_2
+     	STORE,NEW
+    	VGET,B(1,0),1
+    	VGET,B(1,1),2
+    	/OUTPUT,'Saida_DADOS','txt','SAVE_PATH',APPEND
+	*VWRITE,'CONT',k,'NO =',AA,'X=',XXX,'Y=',YYY,'Z=',ZZZ
+    	%5S %5I %5S %10I %7S %14F %7S %14F %7S %14F
+     	*VWRITE,B(1,0),B(1,1)
+     	%15.5G %15.5G
+    	/OUTPUT,TERM
+    	*GET,AA,NODE,AA,NXTH
+*ENDDO
+*END
+/INPUT,scratch,gui
