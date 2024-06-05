@@ -3,7 +3,7 @@ import base64
 import json
 from utils import decode_base64, save_data
 from dotenv import dotenv_values
-from ansys import rodar_ansys_apdl
+from ansys import rodar_ansys_apdl, WORK_DIR
 
 temp = dotenv_values(".env")
 host = '192.168.0.146'
@@ -22,7 +22,7 @@ def main():
         print("file: %r" % data['filename'])
 
         message = message.replace('SAVE_PATH', WORK_DIR)
-        output_file = WORKD_DIR + '/' + 'Saida_DADOS_' + '_'.join(data['filename'].split('_')[1:])
+        output_file = WORK_DIR + '\\' + 'Saida_DADOS_' + '_'.join(data['filename'].split('_')[1:])
 
         file = open(data['filename'], 'w')
         file.write(message)

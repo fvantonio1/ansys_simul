@@ -10,7 +10,7 @@ from sqlalchemy import create_engine
 def decode_base64(message):
     message_bytes = message.encode('ascii')
     base64_bytes = base64.b64decode(message_bytes)
-    base64_message = base64_bytes.decode('ascii')
+    base64_message = base64_bytes.decode('utf-8')
     return base64_message
 
 def encode_txt(txt):
@@ -42,7 +42,7 @@ def make_file(template, args, write_file=False):
 
 def save_data(file):
     load_dotenv()
-    temp = dotenv_values(".env")
+    
     host = os.getenv("POSTGRES_HOST")
     port = os.getenv("POSTGRES_PORT")
     usr = os.getenv("POSTGRES_USER")
@@ -52,10 +52,10 @@ def save_data(file):
 
     engine = create_engine(db_url)
 
-    data = read_data_from_txt(args.file, POT=True, ESP=True, VEL=True, Z=True, SIG=True, MAT=True)
+    data = read_data_from_txt(file, POT=True, ESP=True, VEL=True, Z=True, SIG=True, MAT=True)
     data = data.reshape(data.shape[0] * data.shape[1], -1)
 
-    df = pd.DataFrame(data, columns=['POT', 'ESP', 'VEL', 'SIG', 'MAT'
+    df = pd.DataFrame(data, columns=['POT', 'ESP', 'VEL', 'SIG', 'MAT',
                                      'Z','X', 'Y', 'TEMPO', 'TEMPERATURA'])
 
     df.to_sql('simulacao_temp', engine, schema='simulacao',

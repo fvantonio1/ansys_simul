@@ -13,12 +13,11 @@ def rodar_ansys_apdl(input_file, output_file='temp.txt'):
     
     # Executar o comando
     process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout, stderr = process.communicate()
+    _, stderr = process.communicate()
     
     # Verificar se houve erros
     if process.returncode != 0:
-        print(f'Ocorreu um erro: {stderr.decode()}')
-        return 1
-    else:
-        print(f'Execução concluída com sucesso: {stdout.decode()}')
+        print(stderr)
         return 0
+    else:
+        return 1
