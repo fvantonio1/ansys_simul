@@ -6,6 +6,7 @@ import pandas as pd
 import os
 from read import read_data_from_txt
 from sqlalchemy import create_engine
+import logging
 
 def decode_base64(message):
     message_bytes = message.encode('ascii')
@@ -63,17 +64,18 @@ def save_data(file):
 
     df.to_sql('simulacao_temp', engine, schema='simulacao',
               if_exists='append', index=False)
-    
 
+def make_logger():
+    logger = logging.getLogger('receiver')
+    logger.setLevel(logging.DEBUG)
 
-if __name__ == '__main__':
-    parser = ArgumentParser()
-    parser.add_argument('--espessura', '-e', type=float, default=0.0064)
-    parser.add_argument('--potencia', '-p', type=int, default=1200)
-    parser.add_argument('--velocidade', '-v', type=float, default=20)
-    parser.add_argument('--sigma', '-s', type=float, default=0.001)
-    parser.add_argument('--material', '-m', type=str, default='A36Termico')
-    args = parser.parse_args()
+    formatter = logging.Formatter(fmt='%(asctime)s %(levelname)-8s %(message)s',
+                              datefmt='%Y-%m-%d %H:%M:%S')
 
-    file_name, file_data = make_file('template_entrada.txt', args, write_file=True)
-    print(file_name)
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.DEBUG)
+    ch.setFormatter(formatter)
+
+    logger.addHandler(ch)
+
+    return logger

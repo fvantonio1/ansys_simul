@@ -29,7 +29,7 @@ parameters = pika.ConnectionParameters(host, credentials=credentials)
 connection = pika.BlockingConnection(parameters)
 channel = connection.channel()
 
-channel.queue_declare(queue='simulacao')
+channel.queue_declare(queue='simulacao', auto_delete=True)
 
 channel.basic_publish(exchange='', routing_key='simulacao', body=data)
 print(" [x] Sent File")
