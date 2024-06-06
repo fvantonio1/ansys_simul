@@ -18,7 +18,7 @@ parameters = pika.ConnectionParameters(host, credentials=credentials)
 def callback(ch, method, properties, body):
     data = json.loads(body)
     message = decode_base64(data['message'])
-    print("file: %r" % data['filename'])
+    logger.info("file: %r" % data['filename'])
 
     message = message.replace('SAVE_PATH', WORK_DIR)
     output_file = WORK_DIR + '\\' + 'Saida_DADOS_' + '_'.join(data['filename'].split('_')[1:])
