@@ -1,5 +1,5 @@
 import subprocess
-from receiver import logger
+from utils import logger
 
 # Caminho para o executável do ANSYS APDL
 ANSYS_EXE_PATH = 'especifique o path do executável do ansys apdl'

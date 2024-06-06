@@ -8,8 +8,6 @@ from read import read_data_from_txt
 from sqlalchemy import create_engine
 import logging
 
-logger = make_logger()
-
 def decode_base64(message):
     message_bytes = message.encode('ascii')
     base64_bytes = base64.b64decode(message_bytes)
@@ -81,3 +79,5 @@ def make_logger():
     logger.addHandler(ch)
 
     return logger
+
+logger = make_logger()
