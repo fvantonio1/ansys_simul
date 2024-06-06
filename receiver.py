@@ -5,9 +5,7 @@ import json
 from utils import decode_base64, save_data
 from dotenv import dotenv_values
 from ansys import rodar_ansys_apdl, WORK_DIR
-from utils import make_logger
-
-logger = make_logger()
+from utils import logger
 
 temp = dotenv_values(".env")
 host = '192.168.0.146'
