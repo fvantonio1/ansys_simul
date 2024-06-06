@@ -16,8 +16,8 @@ def rodar_ansys_apdl(input_file, output_file='temp.txt'):
     _, stderr = process.communicate()
     
     # Verificar se houve erros
-    if process.returncode != 0:
-        logger.error(stderr.decode('utf-8'))
+    if process.returncode not in [0, 8]:
+        logger.error(str(process.returncode) + ':' stderr.decode('utf-8'))
         return 0
     else:
         return 1
