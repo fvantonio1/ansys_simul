@@ -1,4 +1,5 @@
 import subprocess
+from receiver import logger
 
 # Caminho para o executável do ANSYS APDL
 ANSYS_EXE_PATH = 'especifique o path do executável do ansys apdl'
@@ -16,7 +17,7 @@ def rodar_ansys_apdl(input_file, output_file='temp.txt'):
     
     # Verificar se houve erros
     if process.returncode != 0:
-        print(stderr)
+        logger.error(stderr.decode('utf-8'))
         return 0
     else:
         return 1
