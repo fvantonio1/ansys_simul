@@ -7,6 +7,7 @@ import os
 from read import read_data_from_txt
 from sqlalchemy import create_engine
 import logging
+import numpy as np
 
 def decode_base64(message):
     message_bytes = message.encode('ascii')
