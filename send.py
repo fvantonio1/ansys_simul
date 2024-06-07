@@ -16,7 +16,7 @@ parser.add_argument('--sigma', '-s', type=float, default=0.001)
 parser.add_argument('--material', '-m', type=str, default='A36')
 args = parser.parse_args()
 
-file_name, file_data = make_file('template_entrada.txt', args)
+file_name, file_data = make_file('template_entrada.txt', args, write_file=True)
 
 message = encode_txt(file_data).decode('utf-8')
 data = json.dumps({
@@ -24,8 +24,8 @@ data = json.dumps({
     'message':message
 })
 
-credentials = pika.PlainCredentials(temp['RABBITMQ_USER'], temp['RABBITMQ_PASSWORD'], heartbeat=0)
-parameters = pika.ConnectionParameters(host, credentials=credentials)
+credentials = pika.PlainCredentials(temp['RABBITMQ_USER'], temp['RABBITMQ_PASSWORD'])
+parameters = pika.ConnectionParameters(host, credentials=credentials, heartbeat=0)
 connection = pika.BlockingConnection(parameters)
 channel = connection.channel()
 

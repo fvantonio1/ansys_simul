@@ -33,6 +33,11 @@ def make_file(template, args, write_file=False):
     c = f'p{args.potencia}_v{args.velocidade}_e{args.espessura}_s{args.sigma}_m{args.material}'
     file_data = file_data.replace('Saida_DADOS', 'Saida_DADOS_'+c)
 
+    with open(f'materiais/{args.material}.txt', 'r') as file:
+        material_data = file.read()
+
+    file_data = file_data.replace("MPREAD,'A36','mp'", material_data)
+
     file_name = f'tmp_{c}.txt'
 
     if write_file:
