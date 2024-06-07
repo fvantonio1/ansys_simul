@@ -24,7 +24,7 @@ data = json.dumps({
     'message':message
 })
 
-credentials = pika.PlainCredentials(temp['RABBITMQ_USER'], temp['RABBITMQ_PASSWORD'])
+credentials = pika.PlainCredentials(temp['RABBITMQ_USER'], temp['RABBITMQ_PASSWORD'], heartbeat=0)
 parameters = pika.ConnectionParameters(host, credentials=credentials)
 connection = pika.BlockingConnection(parameters)
 channel = connection.channel()

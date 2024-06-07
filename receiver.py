@@ -11,7 +11,7 @@ temp = dotenv_values(".env")
 host = '192.168.0.146'
 
 credentials = pika.PlainCredentials(temp['RABBITMQ_USER'], temp['RABBITMQ_PASSWORD'])
-parameters = pika.ConnectionParameters(host, credentials=credentials)
+parameters = pika.ConnectionParameters(host, credentials=credentials, heartbeat=0)
 
 def callback(ch, method, properties, body):
     data = json.loads(body)
@@ -55,7 +55,7 @@ while True:
 
         channel.queue_declare(queue='simulacao', auto_delete=True)
         channel.queue_bind(
-            exchange='simulacao', queue='simulacao', routing_key='simulacao')
+            exchange='exchange', queue='simulacao', routing_key='standard_key')
 
         channel.basic_qos(prefetch_count=1)
 
@@ -68,8 +68,9 @@ while True:
             logger.info('Stopping consuming messages')
             channel.stop_consuming()
 
-            connection.close()
             break
+
+        connection.close()
 
     # Do not recover if connection was closed by broker
     except pika.exceptions.ConnectionClosedByBroker:
