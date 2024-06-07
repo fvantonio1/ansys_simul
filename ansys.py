@@ -4,19 +4,19 @@ import os
 import glob
 
 # Caminho para o executável do ANSYS APDL
-ANSYS_EXE_PATH = 'especifique o path do executável do ansys apdl'
+ANSYS_EXE_PATH = os.path.join('C:\\', 'Arquivos de Programa', os.getlogin(), 'ANSYS INC\\v241\\ANSYS\\bin\\winx64\\ANSYS241.exe')
 WORK_DIR = 'C:\\simul_python'
 
 # create workdir if not exists
 if not os.path.exists(WORK_DIR):
     os.makedirs(WORK_DIR)
 
-# remove all files in workdir to avoid conflite
-files = glob.glob(WORK_DIR + '\\*')
-for f in files:
-    os.remove(f)
-
 def rodar_ansys_apdl(input_file, output_file='temp.txt'):
+    # remove all files in workdir to avoid conflite
+    files = glob.glob(WORK_DIR + '\\*')
+    for f in files:
+        os.remove(f)
+
     job_name = 'simul_python'
     
     # Comando para executar o ANSYS em modo batch
