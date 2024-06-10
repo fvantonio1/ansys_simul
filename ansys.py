@@ -4,7 +4,7 @@ import os
 import glob
 
 # Caminho para o executável do ANSYS APDL
-ANSYS_EXE_PATH = os.path.join('C:\\', 'Arquivos de Programa', os.getlogin(), 'ANSYS INC\\v241\\ANSYS\\bin\\winx64\\ANSYS241.exe')
+ANSYS_EXE_PATH = os.path.join('C:\\', 'Arquivos de Programa', 'ANSYS INC\\v241\\ANSYS\\bin\\winx64\\ANSYS241.exe')
 WORK_DIR = 'C:\\simul_python'
 
 # create workdir if not exists

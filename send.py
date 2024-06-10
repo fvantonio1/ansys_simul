@@ -16,7 +16,7 @@ parser.add_argument('--sigma', '-s', type=float, default=0.001)
 parser.add_argument('--material', '-m', type=str, default='A36')
 args = parser.parse_args()
 
-file_name, file_data = make_file('template_entrada.txt', args, write_file=True)
+file_name, file_data = make_file('template_entrada.txt', args, write_file=False)
 
 message = encode_txt(file_data).decode('utf-8')
 data = json.dumps({
@@ -29,9 +29,15 @@ parameters = pika.ConnectionParameters(host, credentials=credentials, heartbeat=
 connection = pika.BlockingConnection(parameters)
 channel = connection.channel()
 
-channel.queue_declare(queue='simulacao', auto_delete=True)
+channel.queue_declare(queue='simulacao', durable=True)
 
-channel.basic_publish(exchange='', routing_key='simulacao', body=data)
+channel.basic_publish(exchange='',
+                      routing_key='simulacao',
+                      body=data,
+                      properties=pika.BasicProperties(
+                          delivery_mode=pika.DeliveryMode.Persistent
+                      ))
+                      
 print(" [x] Sent File")
 
 connection.close()
