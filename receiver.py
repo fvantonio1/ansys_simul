@@ -7,6 +7,7 @@ from dotenv import dotenv_values
 from ansys import rodar_ansys_apdl, WORK_DIR
 from utils import logger
 import time
+from threading import Thread
 
 temp = dotenv_values(".env")
 host = '192.168.0.146'
@@ -31,24 +32,25 @@ def callback(ch, method, properties, body):
 
     # roda a simulação por linha de comando
     logger.info("Iniciando simulação......")
-    status = rodar_ansys_apdl(data['filename'])
-    if status:
-        logger.info("Simulação concluída com sucesso!")
 
-        logger.info("Salvando dados no banco de dados......")
-        try:
-            # save data from outputfile in database
-            save_data(output_file)
-            logger.info("Processo concluído!")
+    thread = Thread(target=rodar_ansys_apdl, args=(data['filename'])
+    while thread.is_alive():
+        ch._connection.sleep(0.1)
 
-            # only ack message if simulation is completed and saved with sucess
-            ch.basic_ack(delivery_tag=method.delivery_tag)
+    logger.info("Simulação concluída!")
 
-        except Exception as error:
-            logger.error("Erro ao salvar os dados no banco de dados: %r" % error)
+    logger.info("Salvando dados no banco de dados......")
+    try:
+        # save data from outputfile in database
+        save_data(output_file)
+        logger.info("Processo concluído!")
 
-    else:
-        logger.error("Erro na simulação!")
+        # only ack message if simulation is completed and saved with sucess
+        ch.basic_ack(delivery_tag=method.delivery_tag)
+
+    except Exception as error:
+        logger.error("Erro ao salvar os dados no banco de dados: %r" % error)
+
 
 # loop to look for messages  
 while True:
