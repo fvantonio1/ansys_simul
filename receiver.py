@@ -33,7 +33,8 @@ def callback(ch, method, properties, body):
     # roda a simulação por linha de comando
     logger.info("Iniciando simulação......")
 
-    thread = Thread(target=rodar_ansys_apdl, args=(data['filename'])
+    thread = Thread(target=rodar_ansys_apdl, args=(data['filename'], ))
+    thread.start()
     while thread.is_alive():
         ch._connection.sleep(0.1)
 
@@ -45,11 +46,11 @@ def callback(ch, method, properties, body):
         save_data(output_file)
         logger.info("Processo concluído!")
 
-        # only ack message if simulation is completed and saved with sucess
-        ch.basic_ack(delivery_tag=method.delivery_tag)
-
     except Exception as error:
         logger.error("Erro ao salvar os dados no banco de dados: %r" % error)
+
+    # only ack message if simulation is completed and saved with sucess
+    ch.basic_ack(delivery_tag=method.delivery_tag)
 
 
 # loop to look for messages  
@@ -58,18 +59,8 @@ while True:
         connection = pika.BlockingConnection(parameters)
         
         channel = connection.channel()
-        # channel.exchange_declare(
-        #     exchange='exchange',
-        #     exchange_type=ExchangeType.direct,
-        #     passive=False,
-        #     durable=True,
-        #     auto_delete=False
-        # )
 
         channel.queue_declare(queue='simulacao', durable=True)
-        # channel.queue_bind(
-        #     exchange='exchange', queue='simulacao', routing_key='standard_key')
-
         channel.basic_qos(prefetch_count=1)
 
         channel.basic_consume(queue='simulacao', on_message_callback=callback, auto_ack=False)
@@ -81,10 +72,8 @@ while True:
             logger.info('Stopping consuming messages')
             channel.stop_consuming()
 
-            break
-
-        connection.close()
-        time.sleep(20)
+        connection.close()    
+        break
 
     # Do not recover if connection was closed by broker
     except pika.exceptions.ConnectionClosedByBroker:
