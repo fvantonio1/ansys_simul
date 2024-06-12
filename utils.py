@@ -68,7 +68,7 @@ def save_data(file):
     float_columns = ['POT', 'ESP', 'VEL', 'SIG', 'Z', 'X', 'Y', 'TEMPO', 'TEMPERATURA']
     df[float_columns] = df[float_columns].astype(np.float32)
 
-    df.to_sql('simulacao_temp', engine, schema='simulacao',
+    df.to_sql('simulacao_temp', engine, schema='public',
               if_exists='append', index=False)
 
 def make_logger():

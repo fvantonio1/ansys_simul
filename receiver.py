@@ -59,8 +59,20 @@ while True:
         connection = pika.BlockingConnection(parameters)
         
         channel = connection.channel()
+        channel.exchange_declare(
+            exchange='exchange',
+            exchange_type=ExchangeType.direct,
+            passive=False,
+            durable=True,
+            auto_delete=False,
+        )
 
         channel.queue_declare(queue='simulacao', durable=True)
+        channel.queue_bind(
+            queue='standard',
+            exchange='exchange',
+            routing_key='standard_key',
+        )
         channel.basic_qos(prefetch_count=1)
 
         channel.basic_consume(queue='simulacao', on_message_callback=callback, auto_ack=False)
