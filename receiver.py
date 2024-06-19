@@ -8,12 +8,15 @@ from ansys import rodar_ansys_apdl, WORK_DIR
 from utils import logger
 import time
 from threading import Thread
+import psutil
+
+PROCNAME = "ANSYS.exe"
 
 temp = dotenv_values(".env")
 host = '192.168.0.146'
 
 credentials = pika.PlainCredentials(temp['RABBITMQ_USER'], temp['RABBITMQ_PASSWORD'])
-parameters = pika.ConnectionParameters(host, credentials=credentials, heartbeat=0)
+parameters = pika.ConnectionParameters(host, credentials=credentials, heartbeat=0, blocked_connection_timeout=0)
 
 def callback(ch, method, properties, body):
     data = json.loads(body)
@@ -36,21 +39,38 @@ def callback(ch, method, properties, body):
     thread = Thread(target=rodar_ansys_apdl, args=(data['filename'], ))
     thread.start()
     while thread.is_alive():
-        ch._connection.sleep(0.1)
+        ch._process_data_events(5)
 
-    logger.info("Simulação concluída!")
+    thread.join()
 
-    logger.info("Salvando dados no banco de dados......")
-    try:
-        # save data from outputfile in database
-        save_data(output_file)
-        logger.info("Processo concluído!")
+    # verify simulation status 
+    status = thread.value
 
-    except Exception as error:
-        logger.error("Erro ao salvar os dados no banco de dados: %r" % error)
+    if status:
+        logger.info("Simulação concluída!")
 
-    # only ack message if simulation is completed and saved with sucess
-    ch.basic_ack(delivery_tag=method.delivery_tag)
+        logger.info("Salvando dados no banco de dados......")
+        try:
+            # save data from outputfile in database
+            save_data(output_file)
+            logger.info("Processo concluído!")
+
+        except Exception as error:
+            logger.error("Erro ao salvar os dados no banco de dados: %r" % error)
+
+        # only ack message if simulation is completed and saved with sucess
+        ch.basic_ack(delivery_tag=method.delivery_tag)
+
+    else:
+        logger.info("Simulação falhou!")
+
+    # kill ANSYS process to avoid errors
+    for proc in psutil.process_iter():
+    # check whether the process name matches
+    if proc.name() == PROCNAME:
+        proc.kill()
+
+    ch.stop_consuming()
 
 
 # loop to look for messages  
@@ -69,13 +89,13 @@ while True:
 
         channel.queue_declare(queue='simulacao', durable=True)
         channel.queue_bind(
-            queue='standard',
+            queue='simulacao',
             exchange='exchange',
             routing_key='standard_key',
         )
         channel.basic_qos(prefetch_count=1)
 
-        channel.basic_consume(queue='simulacao', on_message_callback=callback, auto_ack=False)
+        channel.basic_consume(queue='simulacao', on_message_callback=callback, auto_ack=True)
 
         try:
             logger.info('Waiting for messages. To exit press CTRL+C')
@@ -83,9 +103,10 @@ while True:
         except KeyboardInterrupt:
             logger.info('Stopping consuming messages')
             channel.stop_consuming()
+            connection.close()    
+            break
 
-        connection.close()    
-        break
+        connection.close()
 
     # Do not recover if connection was closed by broker
     except pika.exceptions.ConnectionClosedByBroker:
