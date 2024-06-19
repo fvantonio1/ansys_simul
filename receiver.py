@@ -66,9 +66,9 @@ def callback(ch, method, properties, body):
 
     # kill ANSYS process to avoid errors
     for proc in psutil.process_iter():
-    # check whether the process name matches
-    if proc.name() == PROCNAME:
-        proc.kill()
+        # check whether the process name matches
+        if proc.name() == PROCNAME:
+            proc.kill()
 
     ch.stop_consuming()
 
