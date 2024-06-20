@@ -41,28 +41,28 @@ def callback(ch, method, properties, body):
     while thread.is_alive():
         ch._process_data_events(5)
 
-    thread.join()
+    # thread.join()
 
-    # verify simulation status 
-    status = thread.value
+    # # verify simulation status 
+    # status = thread.value
 
-    if status:
-        logger.info("Simulação concluída!")
+    # if status:
+    logger.info("Simulação concluída!")
 
-        logger.info("Salvando dados no banco de dados......")
-        try:
-            # save data from outputfile in database
-            save_data(output_file)
-            logger.info("Processo concluído!")
-
-        except Exception as error:
-            logger.error("Erro ao salvar os dados no banco de dados: %r" % error)
+    logger.info("Salvando dados no banco de dados......")
+    try:
+        # save data from outputfile in database
+        save_data(output_file)
+        logger.info("Processo concluído!")
 
         # only ack message if simulation is completed and saved with sucess
         ch.basic_ack(delivery_tag=method.delivery_tag)
 
-    else:
-        logger.info("Simulação falhou!")
+    except Exception as error:
+        logger.error("Erro ao salvar os dados no banco de dados: %r" % error)
+
+    # else:
+    #     logger.info("Simulação falhou!")
 
     # kill ANSYS process to avoid errors
     for proc in psutil.process_iter():
