@@ -57,7 +57,12 @@ def save_data(file):
     db = os.getenv("POSTGRES_DB")
     db_url = f'postgresql+psycopg2://{usr}:{password}@{host}:{port}/{db}'
 
-    engine = create_engine(db_url)
+    engine = create_engine(db_url,
+                           pool_size=10,
+                           max_overflow=2,
+                           pool_recycle=300,
+                           pool_pre_ping=True,
+                           pool_use_lifo=True)
 
     data = read_data_from_txt(file, POT=True, ESP=True, VEL=True, Z=True, SIG=True, MAT=True)
     data = data.reshape(data.shape[0] * data.shape[1], -1)
