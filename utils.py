@@ -19,6 +19,11 @@ def encode_txt(txt):
     txt_bytes = bytes(txt, 'utf-8')
     return base64.b64encode(txt_bytes)
 
+def write_file(body, filename):
+    file = open(filename, 'w')
+    file.write(body)
+    file.close()
+
 def make_file(template, args, write_file=False):
     with open(template, 'r') as file:
         file_data = file.read()
@@ -73,7 +78,7 @@ def save_data(file):
     float_columns = ['POT', 'ESP', 'VEL', 'SIG', 'Z', 'X', 'Y', 'TEMPO', 'TEMPERATURA']
     df[float_columns] = df[float_columns].astype(np.float32)
 
-    df.to_sql('simulacao_temp', engine, schema='public',
+    df.to_sql('simulacao_termica', engine, schema='public',
               if_exists='append', index=False)
 
 def make_logger():

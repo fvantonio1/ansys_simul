@@ -16,12 +16,13 @@ parser.add_argument('--sigma', '-s', type=float, default=0.001)
 parser.add_argument('--material', '-m', type=str, default='A36')
 args = parser.parse_args()
 
-file_name, file_data = make_file('template_entrada.txt', args, write_file=False)
+file_name, file_termica = make_file('template_termico.txt', args, write_file=False)
+_, file_estrutural = make_file('template_estrutural.txt', args, write_file=False)
 
-message = encode_txt(file_data).decode('utf-8')
 data = json.dumps({
-    'filename':file_name,
-    'message':message
+    'filename': file_name,
+    'termica': encode_txt(file_termica).decode('utf-8'),
+    'estrutural': encode_txt(file_estrutural).decode('utf-8')
 })
 
 credentials = pika.PlainCredentials(temp['RABBITMQ_USER'], temp['RABBITMQ_PASSWORD'])

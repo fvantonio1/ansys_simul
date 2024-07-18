@@ -2,7 +2,7 @@ import pika, sys, os
 from pika.exchange_type import ExchangeType
 import base64
 import json
-from utils import decode_base64, save_data
+from utils import decode_base64, save_data, write_file
 from dotenv import dotenv_values
 from ansys import rodar_ansys_apdl, WORK_DIR
 from utils import logger
@@ -19,9 +19,14 @@ credentials = pika.PlainCredentials(temp['RABBITMQ_USER'], temp['RABBITMQ_PASSWO
 parameters = pika.ConnectionParameters(host, credentials=credentials, heartbeat=0, blocked_connection_timeout=0)
 
 def callback(ch, method, properties, body):
+    # kill ANSYS process to avoid errors
+    for proc in psutil.process_iter():
+        if proc.name() == PROCNAME:
+            proc.kill()
+
     data = json.loads(body)
     # decode base64 messsage
-    message = decode_base64(data['message'])
+    message = decode_base64(data['termica'])
     logger.info("file: %r" % data['filename'])
 
     # replace output path in simulation code
@@ -29,49 +34,47 @@ def callback(ch, method, properties, body):
     output_file = WORK_DIR + '\\' + 'Saida_DADOS_' + '_'.join(data['filename'].split('_')[1:])
 
     # write simulation code in txt
-    file = open(data['filename'], 'w')
-    file.write(message)
-    file.close()
+    write_file(message, data['filename'])
 
     # roda a simulação por linha de comando
-    logger.info("Iniciando simulação......")
+    logger.info("Iniciando simulação térmica......")
 
     thread = Thread(target=rodar_ansys_apdl, args=(data['filename'], ))
     thread.start()
     while thread.is_alive():
         ch._process_data_events(5)
 
-    # thread.join()
-
-    # # verify simulation status 
-    # status = thread.value
-
     # if status:
-    logger.info("Simulação concluída!")
+    logger.info("Simulação térmica concluída!")
 
     logger.info("Salvando dados no banco de dados......")
     try:
         # save data from outputfile in database
         save_data(output_file)
-        logger.info("Processo concluído!")
-
-        # only ack message if simulation is completed and saved with sucess
-        ch.basic_ack(delivery_tag=method.delivery_tag)
+        logger.info("Dados da simulação térmica salvos!")
 
     except Exception as error:
-        logger.error("Erro ao salvar os dados no banco de dados: %r" % error)
+        logger.error("Erro ao salvar os dados da simulação térmica no banco de dados: %r" % error)
 
-    # else:
-    #     logger.info("Simulação falhou!")
+        ch.stop_consuming()
+        return 
 
-    # kill ANSYS process to avoid errors
-    for proc in psutil.process_iter():
-        # check whether the process name matches
-        if proc.name() == PROCNAME:
-            proc.kill()
+    estrutural = decode_base64(data['estrutural'])
 
+    write_file(estrutural, data['filename'])
+
+    logger.info("Iniciando simulação estrutural......")
+
+    thread = Thread(target=rodar_ansys_apdl, args=(data['filename'], False,))
+    thread.start()
+    while thread.is_alive():
+        ch._process_data_events(5)
+
+    logger.info("Simulação estrutural concluída!")
+
+    # only ack message if simulation is completed and saved with sucess
+    ch.basic_ack(delivery_tag=method.delivery_tag)
     ch.stop_consuming()
-
 
 # loop to look for messages  
 while True:

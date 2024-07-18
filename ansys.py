@@ -11,11 +11,12 @@ WORK_DIR = 'C:\\simul_python'
 if not os.path.exists(WORK_DIR):
     os.makedirs(WORK_DIR)
 
-def rodar_ansys_apdl(input_file, output_file='temp.txt'):
+def rodar_ansys_apdl(input_file, clear_folder=True, output_file='temp.txt'):
     # remove all files in workdir to avoid conflite
-    files = glob.glob(WORK_DIR + '\\*')
-    for f in files:
-        os.remove(f)
+    if clear_folder:
+        files = glob.glob(WORK_DIR + '\\*')
+        for f in files:
+            os.remove(f)
 
     job_name = 'simul_python'
     
