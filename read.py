@@ -80,7 +80,7 @@ def read_data_from_txt(file, POT=True, ESP=True, VEL=True, Z=False, SIG=False, M
     return np.array(data) # .astype(np.float32)
 
 def read_data_estrutural(file):
-        lines = open(file, 'r').readlines()
+    lines = open(file, 'r').readlines()
 
     data = []
     p0 = True
