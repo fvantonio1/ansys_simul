@@ -59,6 +59,9 @@ def callback(ch, method, properties, body):
         ch.stop_consuming()
         return 
 
+    os.remove(output_file)
+
+    # roda a simulação estrutural
     estrutural = decode_base64(data['estrutural'])
 
     write_file(estrutural, data['filename'])
