@@ -78,3 +78,30 @@ def read_data_from_txt(file, POT=True, ESP=True, VEL=True, Z=False, SIG=False, M
 
     #POT, x, y, {z,} tempo, temperatura
     return np.array(data) # .astype(np.float32)
+
+def read_data_estrutural(file):
+        lines = open(file, 'r').readlines()
+
+    data = []
+    p0 = True
+    # get information about metal sheet
+    for line in lines[:10]:
+        if line.startswith(' POT'):
+            POT = line.replace('\n', '').split(' ')[-1]
+
+        if line.startswith(' ESP'):
+            ESP = line.replace('\n', '').split(' ')[-1]
+
+        if line.startswith(' VEL'):
+            VEL = line.replace('\n', '').split(' ')[-1]
+    
+        if line.startswith(' SIG'):
+            SIG = line.replace('\n', '').split(' ')[-1]
+
+        if line.startswith(' MAT'):
+            MAT = line.replace('\n', '').split(' ')[-1]
+
+    for line in lines[11:]:
+        data.append([POT, ESP, VEL, SIG, MAT].extend(re.sub(r"[^0-9.]+", ",", line).split(',')[1:-1]))
+
+    return np.array(data)

@@ -4,7 +4,7 @@ import re
 from dotenv import load_dotenv
 import pandas as pd
 import os
-from read import read_data_from_txt
+from read import read_data_from_txt, read_data_estrutural
 from sqlalchemy import create_engine
 import logging
 import numpy as np
@@ -52,7 +52,7 @@ def make_file(template, args, write_file=False):
 
     return file_name, file_data
 
-def save_data(file):
+def save_data(file, simul):
     load_dotenv()
     
     host = os.getenv("POSTGRES_HOST")
@@ -69,17 +69,31 @@ def save_data(file):
                            pool_pre_ping=True,
                            pool_use_lifo=True)
 
-    data = read_data_from_txt(file, POT=True, ESP=True, VEL=True, Z=True, SIG=True, MAT=True)
-    data = data.reshape(data.shape[0] * data.shape[1], -1)
+    if simul == 'termica':
+        data = read_data_from_txt(file, POT=True, ESP=True, VEL=True, Z=True, SIG=True, MAT=True)
+        data = data.reshape(data.shape[0] * data.shape[1], -1)
 
-    df = pd.DataFrame(data, columns=['POT', 'ESP', 'VEL', 'SIG', 'MAT',
-                                     'Z','X', 'Y', 'TEMPO', 'TEMPERATURA'])
+        df = pd.DataFrame(data, columns=['POT', 'ESP', 'VEL', 'SIG', 'MAT',
+                                        'Z','X', 'Y', 'TEMPO', 'TEMPERATURA'])
 
-    float_columns = ['POT', 'ESP', 'VEL', 'SIG', 'Z', 'X', 'Y', 'TEMPO', 'TEMPERATURA']
-    df[float_columns] = df[float_columns].astype(np.float32)
+        float_columns = ['POT', 'ESP', 'VEL', 'SIG', 'Z', 'X', 'Y', 'TEMPO', 'TEMPERATURA']
+        df[float_columns] = df[float_columns].astype(np.float32)
 
-    df.to_sql('simulacao_termica', engine, schema='public',
-              if_exists='append', index=False)
+        df.to_sql('simulacao_termica', engine, schema='public',
+                  if_exists='append', index=False)
+
+    elif simul == 'estrutural':
+        data = read_data_estrutural(file)
+
+        columns = ['POT', 'ESP', 'VEL', 'SIG', 'MAT', 'X', 'Y', 'Z', 'Ux', 'Uy', 'Uz', 'Sx', 'Sy', 'Sz']
+        df = pd.DataFrame(data, columns=columns)
+
+        float_columns = columns.remove('MAT')
+        df[float_columns] = df[float_columns].astype(np.float32)
+
+        df.to_sql('simulacao_estrutural', engine, schema='public',
+                  if_exists='append', index=False)
+
 
 def make_logger():
     logger = logging.getLogger('receiver')

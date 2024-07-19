@@ -50,7 +50,7 @@ def callback(ch, method, properties, body):
     logger.info("Salvando dados no banco de dados......")
     try:
         # save data from outputfile in database
-        save_data(output_file)
+        save_data(output_file, simul='termica')
         logger.info("Dados da simulação térmica salvos!")
 
     except Exception as error:
@@ -71,6 +71,15 @@ def callback(ch, method, properties, body):
         ch._process_data_events(5)
 
     logger.info("Simulação estrutural concluída!")
+
+    logger.info("Salvando dados no banco de dados......")
+    try:
+        # save data from outputfile in database
+        save_data(output_file, simul='estrutural')
+        logger.info("Dados da simulação estrutural salvos!")
+
+    except Exception as error:
+        logger.error("Erro ao salvar os dados da simulação estrutural no banco de dados: %r" % error)
 
     # only ack message if simulation is completed and saved with sucess
     ch.basic_ack(delivery_tag=method.delivery_tag)
