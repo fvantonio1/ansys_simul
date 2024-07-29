@@ -24,7 +24,7 @@ def write_file(body, filename):
     file.write(body)
     file.close()
 
-def make_file(template, args, write_file=False):
+def make_file(template, args, write_file=False, simul_type='termica'):
     with open(template, 'r') as file:
         file_data = file.read()
 
@@ -36,7 +36,7 @@ def make_file(template, args, write_file=False):
     file_data = file_data.replace('A36', f'{args.material}')
 
     c = f'p{args.potencia}_v{args.velocidade}_e{args.espessura}_s{args.sigma}_m{args.material}'
-    file_data = file_data.replace('Saida_DADOS', 'Saida_DADOS_'+c)
+    file_data = file_data.replace('Saida_DADOS', simul_type + '_Saida_DADOS_' +c)
 
     with open(f'materiais/{args.material}.txt', 'r') as file:
         material_data = file.read()
