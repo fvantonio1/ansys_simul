@@ -31,7 +31,7 @@ def callback(ch, method, properties, body):
 
     # replace output path in simulation code
     message = message.replace('SAVE_PATH', WORK_DIR)
-    output_file = WORK_DIR + '\\' + 'Saida_DADOS_' + '_'.join(data['filename'].split('_')[1:])
+    output_file = WORK_DIR + '\\' + 'termica_Saida_DADOS_' + '_'.join(data['filename'].split('_')[1:])
 
     # write simulation code in txt
     write_file(message, data['filename'])
@@ -59,13 +59,12 @@ def callback(ch, method, properties, body):
         ch.stop_consuming()
         return 
 
-    os.remove(output_file)
-
     # roda a simulação estrutural
     estrutural = decode_base64(data['estrutural'])
 
-    write_file(estrutural, data['filename'])
-
+    estrutural = estrutural.replace('SAVE_PATH', WORK_DIR)
+    write_file(message, 'estrutural_' + data['filename'])
+ 
     logger.info("Iniciando simulação estrutural......")
 
     thread = Thread(target=rodar_ansys_apdl, args=(data['filename'], False, 'simul_estrutural'))
@@ -76,13 +75,15 @@ def callback(ch, method, properties, body):
     logger.info("Simulação estrutural concluída!")
 
     logger.info("Salvando dados no banco de dados......")
-    try:
+    # try:
         # save data from outputfile in database
-        save_data(output_file, simul='estrutural')
-        logger.info("Dados da simulação estrutural salvos!")
 
-    except Exception as error:
-        logger.error("Erro ao salvar os dados da simulação estrutural no banco de dados: %r" % error)
+    output_file = WORK_DIR + '\\' + 'estrutural_Saida_DADOS_' + '_'.join(data['filename'].split('_')[1:])
+    save_data(output_file, simul='estrutural')
+    logger.info("Dados da simulação estrutural salvos!")
+
+    #except Exception as error:
+    #    logger.error("Erro ao salvar os dados da simulação estrutural no banco de dados: %r" % error)
 
     # only ack message if simulation is completed and saved with sucess
     ch.basic_ack(delivery_tag=method.delivery_tag)
