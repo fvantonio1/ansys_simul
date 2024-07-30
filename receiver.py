@@ -25,16 +25,19 @@ def callback(ch, method, properties, body):
             proc.kill()
 
     data = json.loads(body)
+    logger.info("Writing files: %r" % data['filename'])
+
     # decode base64 messsage
-    message = decode_base64(data['termica'])
-    logger.info("file: %r" % data['filename'])
+    termica = decode_base64(data['termica'])
+    estrutural = decode_base64(data['estrutural'])
 
     # replace output path in simulation code
-    message = message.replace('SAVE_PATH', WORK_DIR)
-    output_file = WORK_DIR + '\\' + 'termica_Saida_DADOS_' + '_'.join(data['filename'].split('_')[1:])
+    termica = termica.replace('SAVE_PATH', WORK_DIR)
+    estrutural = estrutural.replace('SAVE_PATH', WORK_DIR)
 
     # write simulation code in txt
-    write_file(message, data['filename'])
+    write_file(termica, 'termica_' + data['filename'])
+    write_file(estrutural, 'estrutural_' + data['filename'])
 
     # roda a simulação por linha de comando
     logger.info("Iniciando simulação térmica......")
@@ -44,9 +47,10 @@ def callback(ch, method, properties, body):
     while thread.is_alive():
         ch._process_data_events(5)
 
-    # if status:
     logger.info("Simulação térmica concluída!")
 
+    # arquivo de saida da simulacao termica
+    output_file = WORK_DIR + '\\' + 'termica_Saida_DADOS_' + '_'.join(data['filename'].split('_')[1:])
     logger.info("Salvando dados no banco de dados......")
     try:
         # save data from outputfile in database
@@ -60,11 +64,6 @@ def callback(ch, method, properties, body):
         return 
 
     # roda a simulação estrutural
-    estrutural = decode_base64(data['estrutural'])
-
-    estrutural = estrutural.replace('SAVE_PATH', WORK_DIR)
-    write_file(message, 'estrutural_' + data['filename'])
- 
     logger.info("Iniciando simulação estrutural......")
 
     thread = Thread(target=rodar_ansys_apdl, args=(data['filename'], False, 'simul_estrutural'))
@@ -74,20 +73,23 @@ def callback(ch, method, properties, body):
 
     logger.info("Simulação estrutural concluída!")
 
-    logger.info("Salvando dados no banco de dados......")
-    # try:
-        # save data from outputfile in database
-
+    # arquivo de saida da simulacao estrutural
     output_file = WORK_DIR + '\\' + 'estrutural_Saida_DADOS_' + '_'.join(data['filename'].split('_')[1:])
-    save_data(output_file, simul='estrutural')
-    logger.info("Dados da simulação estrutural salvos!")
+    logger.info("Salvando dados no banco de dados......")
+    try:
+        # save data from outputfile in database
+        save_data(output_file, simul='estrutural')
+        logger.info("Dados da simulação estrutural salvos!")
 
-    #except Exception as error:
-    #    logger.error("Erro ao salvar os dados da simulação estrutural no banco de dados: %r" % error)
+        # only ack message if simulation is completed and saved with sucess
+        ch.basic_ack(delivery_tag=method.delivery_tag)
+        ch.stop_consuming()
 
-    # only ack message if simulation is completed and saved with sucess
-    ch.basic_ack(delivery_tag=method.delivery_tag)
-    ch.stop_consuming()
+    except Exception as error:
+        logger.error("Erro ao salvar os dados da simulação estrutural no banco de dados: %r" % error)
+
+        ch.stop_consuming()
+        return 
 
 # loop to look for messages  
 while True:
