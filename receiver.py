@@ -42,7 +42,7 @@ def callback(ch, method, properties, body):
     # roda a simulação por linha de comando
     logger.info("Iniciando simulação térmica......")
 
-    thread = Thread(target=rodar_ansys_apdl, args=(data['filename'], True, 'simul_termica'))
+    thread = Thread(target=rodar_ansys_apdl, args=(data['filename'], True, 'simul_termica', 'tmp_termica.txt'))
     thread.start()
     while thread.is_alive():
         ch._process_data_events(5)
@@ -66,7 +66,7 @@ def callback(ch, method, properties, body):
     # roda a simulação estrutural
     logger.info("Iniciando simulação estrutural......")
 
-    thread = Thread(target=rodar_ansys_apdl, args=(data['filename'], False, 'simul_estrutural'))
+    thread = Thread(target=rodar_ansys_apdl, args=(data['filename'], False, 'simul_estrutural', 'tmp_estrutural.txt'))
     thread.start()
     while thread.is_alive():
         ch._process_data_events(5)
