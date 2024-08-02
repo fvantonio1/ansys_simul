@@ -102,6 +102,7 @@ def read_data_estrutural(file):
             MAT = line.replace('\n', '').split(' ')[-1]
 
     for line in lines[11:]:
-        data.append([POT, ESP, VEL, SIG, MAT].extend(re.sub(r"[^0-9.]+", ",", line).split(',')[1:-1]))
+        obs = re.sub(r"[^0-9.]+", ",", line).split(',')[1:-1]
+        data.append([POT, ESP, VEL, SIG, MAT] + obs)
 
     return np.array(data)
