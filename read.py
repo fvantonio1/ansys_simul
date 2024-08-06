@@ -87,22 +87,28 @@ def read_data_estrutural(file):
     # get information about metal sheet
     for line in lines[:10]:
         if line.startswith(' POT'):
-            POT = line.replace('\n', '').split(' ')[-1]
+            POT = re.sub(' +', ' ', line).replace('\n', '').split(' ')[-2]
 
         if line.startswith(' ESP'):
-            ESP = line.replace('\n', '').split(' ')[-1]
+            ESP = re.sub(' +', ' ', line).replace('\n', '').split(' ')[-2]
 
         if line.startswith(' VEL'):
-            VEL = line.replace('\n', '').split(' ')[-1]
+            VEL = re.sub(' +', ' ', line).replace('\n', '').split(' ')[-2]
     
         if line.startswith(' SIG'):
-            SIG = line.replace('\n', '').split(' ')[-1]
+            SIG = re.sub(' +', ' ', line).replace('\n', '').split(' ')[-2]
 
         if line.startswith(' MAT'):
             MAT = line.replace('\n', '').split(' ')[-1]
 
     for line in lines[11:]:
-        obs = re.sub(r"[^0-9.]+", ",", line).split(',')[1:-1]
+        obs = re.sub(' +', ' ', line).replace('\n', '').split(' ')
+        
+        if len(obs) == 11:
+            obs = obs[2:]
+        else:
+            obs = obs[1:]
+
         data.append([POT, ESP, VEL, SIG, MAT] + obs)
 
     return np.array(data)
