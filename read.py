@@ -87,16 +87,16 @@ def read_data_estrutural(file):
     # get information about metal sheet
     for line in lines[:10]:
         if line.startswith(' POT'):
-            POT = re.sub(' +', ' ', line).replace('\n', '').split(' ')[-2]
+            POT = re.sub(' +', ' ', line).replace('\n', '').split(' ')[-1]
 
         if line.startswith(' ESP'):
-            ESP = re.sub(' +', ' ', line).replace('\n', '').split(' ')[-2]
+            ESP = re.sub(' +', ' ', line).replace('\n', '').split(' ')[-1]
 
         if line.startswith(' VEL'):
-            VEL = re.sub(' +', ' ', line).replace('\n', '').split(' ')[-2]
+            VEL = re.sub(' +', ' ', line).replace('\n', '').split(' ')[-1]
     
         if line.startswith(' SIG'):
-            SIG = re.sub(' +', ' ', line).replace('\n', '').split(' ')[-2]
+            SIG = re.sub(' +', ' ', line).replace('\n', '').split(' ')[-1]
 
         if line.startswith(' MAT'):
             MAT = line.replace('\n', '').split(' ')[-1]

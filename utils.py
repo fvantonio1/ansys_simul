@@ -88,8 +88,8 @@ def save_data(file, simul):
         columns = ['POT', 'ESP', 'VEL', 'SIG', 'MAT', 'X', 'Y', 'Z', 'Ux', 'Uy', 'Uz', 'Sx', 'Sy', 'Sz']
         df = pd.DataFrame(data, columns=columns)
 
-        float_columns = columns.remove('MAT')
-        df[float_columns] = df[float_columns].astype(np.float32)
+        columns.remove('MAT')
+        df[columns] = df[columns].astype(np.float32)
 
         df.to_sql('simulacao_estrutural', engine, schema='public',
                   if_exists='append', index=False)
