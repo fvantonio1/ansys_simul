@@ -1,5 +1,5 @@
 import base64
-from argparse import ArgumentParser
+from uuid import uuid4
 import re
 from dotenv import load_dotenv
 import pandas as pd
@@ -24,33 +24,32 @@ def write_file(body, filename):
     file.write(body)
     file.close()
 
-def make_file(template, args, write_file=False, simul_type='termica'):
+def make_file(template, parameters, write_file=False):
     with open(template, 'r') as file:
         file_data = file.read()
 
     float_regex = '[+-]?([0-9]*[.])?[0-9]+'
-    file_data = re.sub('pot='+float_regex, f'pot={args.potencia}', file_data)
-    file_data = re.sub('velSol='+float_regex, f'velSol={args.velocidade}', file_data)
-    file_data = re.sub('esp='+float_regex, f'esp={args.espessura}', file_data)
-    file_data = re.sub('sig='+float_regex, f'sig={args.sigma}', file_data)
-    file_data = file_data.replace('A36', f'{args.material}')
+    file_data = re.sub('esp='+float_regex, f'esp={round(parameters["e"] / 1000, 5)}', file_data)
+    file_data = re.sub('q='+float_regex, f'q={parameters["q"]}', file_data)
+    file_data = re.sub('tamb='+float_regex, f'tamb={parameters["t0"]}', file_data)
+    file_data = re.sub('sig='+float_regex, f'sig={round(parameters["s"] / 1000, 5)}', file_data)
+    file_data = re.sub('velocidade='+float_regex, f'velocidade={round(parameters["v"] / 6000, 5)}', file_data)
+    file_data = re.sub('larg='+float_regex, f'larg={parameters["larg"]}', file_data)
+    file_data = re.sub('comp='+float_regex, f'comp={parameters["comp"]}', file_data)
 
-    c = f'p{args.potencia}_v{args.velocidade}_e{args.espessura}_s{args.sigma}_m{args.material}'
-    file_data = file_data.replace('Saida_DADOS', simul_type + '_Saida_DADOS_' +c)
+    file_data = re.sub('MPDATA,DENS,1,,7900', f'MPDATA,DENS,1,,{parameters["rho"]}', file_data)
+    file_data = re.sub('MPDATA,KXX,1,,18.0', f'MPDATA,KXX,1,,{parameters["cond"]}', file_data)
+    file_data = re.sub('MPDATA,C,1,,540', f'MPDATA,C,1,,{parameters["cal"]}', file_data)
 
-    with open(f'materiais/{args.material}.txt', 'r') as file:
-        material_data = file.read()
-
-    file_data = file_data.replace("MPREAD,'A36','mp'", material_data)
-
-    file_name = f'tmp_{c}.txt'
+    token = str(uuid4())
+    file_name = f'{token}.txt'
 
     if write_file:
-        file = open(file_name, 'w')
+        file = open('simulacoes/' + file_name, 'w')
         file.write(file_data)
         file.close()
 
-    return file_name, file_data
+    return token, file_data
 
 def save_data(file, simul):
     load_dotenv()

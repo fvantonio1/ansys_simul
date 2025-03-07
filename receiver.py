@@ -1,6 +1,5 @@
 import pika, sys, os
 from pika.exchange_type import ExchangeType
-import base64
 import json
 from utils import decode_base64, save_data, write_file
 from dotenv import dotenv_values
@@ -13,10 +12,9 @@ import psutil
 PROCNAME = "ANSYS.exe"
 
 temp = dotenv_values(".env")
-host = '192.168.0.146'
 
 credentials = pika.PlainCredentials(temp['RABBITMQ_USER'], temp['RABBITMQ_PASSWORD'])
-parameters = pika.ConnectionParameters(host, credentials=credentials, heartbeat=0, blocked_connection_timeout=0)
+parameters = pika.ConnectionParameters(temp['HOST'], credentials=credentials, heartbeat=0, blocked_connection_timeout=0)
 
 def callback(ch, method, properties, body):
     # kill ANSYS process to avoid errors
@@ -29,15 +27,13 @@ def callback(ch, method, properties, body):
 
     # decode base64 messsage
     termica = decode_base64(data['termica'])
-    estrutural = decode_base64(data['estrutural'])
 
     # replace output path in simulation code
     termica = termica.replace('SAVE_PATH', WORK_DIR)
-    estrutural = estrutural.replace('SAVE_PATH', WORK_DIR)
 
+    print(data['filename'])
     # write simulation code in txt
-    write_file(termica, 'termica_' + data['filename'])
-    write_file(estrutural, 'estrutural_' + data['filename'])
+    write_file(termica, data['filename'] + '.txt')
 
     # roda a simulação por linha de comando
     logger.info("Iniciando simulação térmica......")
@@ -50,46 +46,22 @@ def callback(ch, method, properties, body):
     logger.info("Simulação térmica concluída!")
 
     # arquivo de saida da simulacao termica
-    output_file = WORK_DIR + '\\' + 'termica_Saida_DADOS_' + '_'.join(data['filename'].split('_')[1:])
-    logger.info("Salvando dados no banco de dados......")
-    try:
-        # save data from outputfile in database
-        save_data(output_file, simul='termica')
-        logger.info("Dados da simulação térmica salvos!")
+    # output_file = WORK_DIR + '\\' + 'termica_Saida_DADOS_' + '_'.join(data['filename'].split('_')[1:])
+    # logger.info("Salvando dados no banco de dados......")
+    # try:
+    #     # save data from outputfile in database
+    #     save_data(output_file, simul='termica')
+    #     logger.info("Dados da simulação térmica salvos!")
 
-    except Exception as error:
-        logger.error("Erro ao salvar os dados da simulação térmica no banco de dados: %r" % error)
+        # # only ack message if simulation is completed and saved with sucess
+        # ch.basic_ack(delivery_tag=method.delivery_tag)
+        # ch.stop_consuming()
 
-        ch.stop_consuming()
-        return 
+    # except Exception as error:
+    #     logger.error("Erro ao salvar os dados da simulação térmica no banco de dados: %r" % error)
 
-    # roda a simulação estrutural
-    logger.info("Iniciando simulação estrutural......")
-
-    thread = Thread(target=rodar_ansys_apdl, args=('estrutural_' + data['filename'], False, 'simul_estrutural', 'tmp_estrutural.txt'))
-    thread.start()
-    while thread.is_alive():
-        ch._process_data_events(5)
-
-    logger.info("Simulação estrutural concluída!")
-
-    # arquivo de saida da simulacao estrutural
-    output_file = WORK_DIR + '\\' + 'estrutural_Saida_DADOS_' + '_'.join(data['filename'].split('_')[1:])
-    logger.info("Salvando dados no banco de dados......")
-    try:
-        # save data from outputfile in database
-        save_data(output_file, simul='estrutural')
-        logger.info("Dados da simulação estrutural salvos!")
-
-        # only ack message if simulation is completed and saved with sucess
-        ch.basic_ack(delivery_tag=method.delivery_tag)
-        ch.stop_consuming()
-
-    except Exception as error:
-        logger.error("Erro ao salvar os dados da simulação estrutural no banco de dados: %r" % error)
-
-        ch.stop_consuming()
-        return 
+    #     ch.stop_consuming()
+    #     return 
 
 # loop to look for messages  
 while True:
