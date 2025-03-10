@@ -34,8 +34,8 @@ def make_file(template, parameters, write_file=False):
     file_data = re.sub('tamb='+float_regex, f'tamb={parameters["t0"]}', file_data)
     file_data = re.sub('sig='+float_regex, f'sig={round(parameters["s"] / 1000, 5)}', file_data)
     file_data = re.sub('velocidade='+float_regex, f'velocidade={round(parameters["v"] / 6000, 5)}', file_data)
-    file_data = re.sub('larg='+float_regex, f'larg={parameters["larg"]}', file_data)
-    file_data = re.sub('comp='+float_regex, f'comp={parameters["comp"]}', file_data)
+    file_data = re.sub('larg='+float_regex, f'larg={round(parameters["larg"] / 1000, 5)}', file_data)
+    file_data = re.sub('comp='+float_regex, f'comp={round(parameters["comp"] / 1000, 5)}', file_data)
 
     file_data = re.sub('MPDATA,DENS,1,,7900', f'MPDATA,DENS,1,,{parameters["rho"]}', file_data)
     file_data = re.sub('MPDATA,KXX,1,,18.0', f'MPDATA,KXX,1,,{parameters["cond"]}', file_data)

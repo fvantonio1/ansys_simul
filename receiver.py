@@ -29,16 +29,16 @@ def callback(ch, method, properties, body):
     termica = decode_base64(data['termica'])
 
     # replace output path in simulation code
-    termica = termica.replace('SAVE_PATH', WORK_DIR)
+    termica = termica.replace('SAVE_PATH', "'" + WORK_DIR + "'")
+    termica = termica.replace('FILE_NAME', "'" + data['filename'] + '_output' + "'")
 
-    print(data['filename'])
     # write simulation code in txt
     write_file(termica, data['filename'] + '.txt')
 
     # roda a simulação por linha de comando
     logger.info("Iniciando simulação térmica......")
 
-    thread = Thread(target=rodar_ansys_apdl, args=('termica_' + data['filename'], True, 'simul_termica', 'tmp_termica.txt'))
+    thread = Thread(target=rodar_ansys_apdl, args=(data['filename'] + '.txt', True, 'simul_termica', 'tmp_termica.txt'))
     thread.start()
     while thread.is_alive():
         ch._process_data_events(5)
@@ -46,7 +46,7 @@ def callback(ch, method, properties, body):
     logger.info("Simulação térmica concluída!")
 
     # arquivo de saida da simulacao termica
-    # output_file = WORK_DIR + '\\' + 'termica_Saida_DADOS_' + '_'.join(data['filename'].split('_')[1:])
+    # output_file = WORK_DIR + '\\' + data['filename'] + '_output' + '.txt
     # logger.info("Salvando dados no banco de dados......")
     # try:
     #     # save data from outputfile in database
