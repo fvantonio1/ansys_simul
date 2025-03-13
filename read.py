@@ -1,54 +1,48 @@
 import re
 import numpy as np 
 
-def read_data_from_txt(file, POT=True, ESP=True, VEL=True, Z=False, SIG=False, MAT=False):
+def read_data_from_txt(file):
     lines = open(file, 'r').readlines()
 
     data = []
     p0 = True
     # get information about metal sheet
-    for line in lines[:10]:
-        # get potencia
-        if POT:
-            if line.startswith(' POT'):
-                POT = line.replace('\n', '').split(' ')[-1]
+    for line in lines[:18]:
+        if line.startswith('   Material'):
+            m = line.replace('\n', '').split(' ')[-1]
 
-        # get espessura
-        if ESP:
-            if line.startswith(' ESP'):
-                ESP = line.replace('\n', '').split(' ')[-1]
+        else:
+            parameter = re.sub(' +', ' ', line.replace('\n', '')).split(' ')[-2]
 
-        # get velocidade
-        if VEL:
-            if line.startswith(' VEL'):
-                VEL = line.replace('\n', '').split(' ')[-1]
-        
-        # get sigma
-        if SIG:
-            if line.startswith(' SIG'):
-                SIG = line.replace('\n', '').split(' ')[-1]
-
-        # get material
-        if MAT:
-            if line.startswith(' MAT'):
-                MAT = line.replace('\n', '').split(' ')[-1]
-
+            if line.startswith('  Espessura'):
+                e = parameter
+            if line.startswith('Comprimento'):
+                c = parameter
+            if line.startswith('    Largura'):
+                l = parameter
+            if line.startswith(' Velocidade'):
+                v = parameter
+            if line.startswith('      Sigma'):
+                s = parameter
+            if line.startswith('   Potencia'):
+                p = parameter
+            if line.startswith('   Temperatura ambiente'):
+                tamb = parameter
+            if line.startswith('       Calor especifico'):
+                cal = parameter
+            if line.startswith('  Condutividade Termica'):
+                cond = parameter
+            if line.startswith('  Densidade'):
+                rho = parameter
 
     # get observations
-    for line in lines[11:]:
+    for line in lines[18:]:
         line = re.sub(' +', ' ', line).replace('\n', '')
         line = line.strip()
 
         # get information about point on sheet
         if line[0] == 'C':
-            # if not first point, add past data point to all data
-            if p0:
-                p0=False
-            else:
-                data.append(point_data)
 
-            point_data = []
-            
             line = re.sub(' *= ', '=', line)
             x = re.findall('X=(\d+\.\d+)', line)[0]
             y = re.findall('Y=(\d+\.\d+)', line)[0]
@@ -60,24 +54,11 @@ def read_data_from_txt(file, POT=True, ESP=True, VEL=True, Z=False, SIG=False, M
 
             time = split[0]
             temp = split[1]
-            obs = []
-            if POT:
-                obs.append(POT)
-            if ESP:
-                obs.append(ESP)
-            if VEL:
-                obs.append(VEL)
-            if SIG:
-                obs.append(SIG)
-            if MAT:
-                obs.append(MAT)
-            if Z:
-                obs.append(z)
-            obs.extend([x, y, time, temp])
-            point_data.append(obs)
+            obs = [e, c, l, v, s, p, tamb, cal, cond, rho, x, y, time, temp]
+            data.append(obs)
 
     #POT, x, y, {z,} tempo, temperatura
-    return np.array(data) # .astype(np.float32)
+    return np.array(data)#.astype(np.float32)
 
 def read_data_estrutural(file):
     lines = open(file, 'r').readlines()

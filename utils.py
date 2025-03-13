@@ -37,9 +37,9 @@ def make_file(template, parameters, write_file=False):
     file_data = re.sub('larg='+float_regex, f'larg={round(parameters["larg"] / 1000, 5)}', file_data)
     file_data = re.sub('comp='+float_regex, f'comp={round(parameters["comp"] / 1000, 5)}', file_data)
 
-    file_data = re.sub('MPDATA,DENS,1,,7900', f'MPDATA,DENS,1,,{parameters["rho"]}', file_data)
-    file_data = re.sub('MPDATA,KXX,1,,18.0', f'MPDATA,KXX,1,,{parameters["cond"]}', file_data)
-    file_data = re.sub('MPDATA,C,1,,540', f'MPDATA,C,1,,{parameters["cal"]}', file_data)
+    file_data = re.sub('densidade='+float_regex, f'densidade={parameters["rho"]}', file_data)
+    file_data = re.sub('condtermica='+float_regex, f'condtermica={parameters["cond"]}', file_data)
+    file_data = re.sub('calorespec='+float_regex, f'calorespec={parameters["cal"]}', file_data)
 
     token = str(uuid4())
     file_name = f'{token}.txt'
@@ -68,30 +68,19 @@ def save_data(file, simul):
                            pool_pre_ping=True,
                            pool_use_lifo=True)
 
-    if simul == 'termica':
-        data = read_data_from_txt(file, POT=True, ESP=True, VEL=True, Z=True, SIG=True, MAT=True)
-        data = data.reshape(data.shape[0] * data.shape[1], -1)
+    data = read_data_from_txt(file)
 
-        df = pd.DataFrame(data, columns=['POT', 'ESP', 'VEL', 'SIG', 'MAT',
-                                        'Z','X', 'Y', 'TEMPO', 'TEMPERATURA'])
+    columns = ['espessura', 'comprimento', 'largura', 'velocidade', 'sigma', 'potencia',
+               'temp. amb.', 'cal. esp.', 'cond. term.', 'densidade', 'x', 'y', 'tempo', 'temperatura']
 
-        float_columns = ['POT', 'ESP', 'VEL', 'SIG', 'Z', 'X', 'Y', 'TEMPO', 'TEMPERATURA']
-        df[float_columns] = df[float_columns].astype(np.float32)
+    df = pd.DataFrame(data, columns=columns)
 
-        df.to_sql('simulacao_termica', engine, schema='public',
-                  if_exists='append', index=False)
+    df = df.astype(np.float32)
+    df['id_simulacao'] = simul
 
-    elif simul == 'estrutural':
-        data = read_data_estrutural(file)
+    df.to_sql('simulacao_termica', engine, schema='public',
+                if_exists='append', index=False)
 
-        columns = ['POT', 'ESP', 'VEL', 'SIG', 'MAT', 'X', 'Y', 'Z', 'Ux', 'Uy', 'Uz', 'Sx', 'Sy', 'Sz']
-        df = pd.DataFrame(data, columns=columns)
-
-        columns.remove('MAT')
-        df[columns] = df[columns].astype(np.float32)
-
-        df.to_sql('simulacao_estrutural', engine, schema='public',
-                  if_exists='append', index=False)
 
 
 def make_logger():
