@@ -54,7 +54,7 @@ def make_file(template, parameters, write_file=False):
 def save_data(file, simul):
     load_dotenv()
     
-    host = os.getenv("POSTGRES_HOST")
+    host = os.getenv("HOST")
     port = os.getenv("POSTGRES_PORT")
     usr = os.getenv("POSTGRES_USER")
     password = os.getenv("POSTGRES_PASSWORD")
@@ -78,7 +78,7 @@ def save_data(file, simul):
     df = df.astype(np.float32)
     df['id_simulacao'] = simul
 
-    df.to_sql('simulacao_termica', engine, schema='public',
+    df.to_sql('simulacao_termica2', engine, schema='public',
                 if_exists='append', index=False)
 
 

@@ -46,7 +46,8 @@ def callback(ch, method, properties, body):
     logger.info("Simulação térmica concluída!")
 
     # arquivo de saida da simulacao termica
-    output_file = WORK_DIR + '\\' + 'output' + '.txt'
+    output_file = os.path.join(WORK_DIR, 'output.txt')
+    
     logger.info("Salvando dados no banco de dados......")
     try:
         # save data from outputfile in database
