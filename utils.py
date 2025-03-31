@@ -37,9 +37,9 @@ def make_file(template, parameters, write_file=False):
     file_data = re.sub('larg='+float_regex, f'larg={round(parameters["larg"] / 1000, 5)}', file_data)
     file_data = re.sub('comp='+float_regex, f'comp={round(parameters["comp"] / 1000, 5)}', file_data)
 
-    file_data = re.sub('densidade='+float_regex, f'densidade={parameters["rho"]}', file_data)
-    file_data = re.sub('condtermica='+float_regex, f'condtermica={parameters["cond"]}', file_data)
-    file_data = re.sub('calorespec='+float_regex, f'calorespec={parameters["cal"]}', file_data)
+    file_data = re.sub('densidade= '+float_regex, f'densidade={parameters["rho"]}', file_data)
+    file_data = re.sub('condtermica= '+float_regex, f'condtermica={parameters["cond"]}', file_data)
+    file_data = re.sub('calorespec= '+float_regex, f'calorespec={parameters["cal"]}', file_data)
 
     token = str(uuid4())
     file_name = f'{token}.txt'

@@ -29,8 +29,8 @@ def callback(ch, method, properties, body):
     termica = decode_base64(data['termica'])
 
     # replace output path in simulation code
-    termica = termica.replace('SAVE_PATH', "'" + WORK_DIR + "'")
-    termica = termica.replace('FILE_NAME', 'output')
+    termica = termica.replace('SAVE_PATH', "'" + 'C:\\output' + "'")
+    termica = termica.replace('FILE_NAME', data['filename'])
 
     # write simulation code in txt
     write_file(termica, data['filename'] + '.txt')
@@ -45,22 +45,23 @@ def callback(ch, method, properties, body):
 
     logger.info("Simulação térmica concluída!")
 
-    # arquivo de saida da simulacao termica
-    output_file = os.path.join(WORK_DIR, 'output.txt')
     
     logger.info("Salvando dados no banco de dados......")
     try:
+        # arquivo de saida da simulacao termica
+        output_file = os.path.join('C:\\output', f'{data['filename']}.txt')
+
         # save data from outputfile in database
         save_data(output_file, simul=data['filename'])
         logger.info("Dados da simulação térmica salvos!")
 
-        # only ack message if simulation is completed and saved with sucess
         ch.basic_ack(delivery_tag=method.delivery_tag)
         ch.stop_consuming()
 
     except Exception as error:
         logger.error("Erro ao salvar os dados da simulação térmica no banco de dados: %r" % error)
 
+        ch.basic_ack(delivery_tag=method.delivery_tag)
         ch.stop_consuming()
         return 
 

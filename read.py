@@ -44,6 +44,7 @@ def read_data_from_txt(file):
         if line[0] == 'C':
 
             line = re.sub(' *= ', '=', line)
+            line = line.replace('-','')
             x = re.findall('X=(\d+\.\d+)', line)[0]
             y = re.findall('Y=(\d+\.\d+)', line)[0]
             z = re.findall('Z=(\d+\.\d+)', line)[0]
