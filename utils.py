@@ -29,17 +29,17 @@ def make_file(template, parameters, write_file=False):
         file_data = file.read()
 
     float_regex = '[+-]?([0-9]*[.])?[0-9]+'
-    file_data = re.sub('esp='+float_regex, f'esp={round(parameters["e"] / 1000, 5)}', file_data)
+    #file_data = re.sub('esp='+float_regex, f'esp={round(parameters["e"] / 1000, 5)}', file_data)
     file_data = re.sub('q='+float_regex, f'q={parameters["q"]}', file_data)
-    file_data = re.sub('tamb='+float_regex, f'tamb={parameters["t0"]}', file_data)
+    #file_data = re.sub('tamb='+float_regex, f'tamb={parameters["t0"]}', file_data)
     file_data = re.sub('sig='+float_regex, f'sig={round(parameters["s"] / 1000, 5)}', file_data)
     file_data = re.sub('velocidade='+float_regex, f'velocidade={round(parameters["v"] / 6000, 5)}', file_data)
-    file_data = re.sub('larg='+float_regex, f'larg={round(parameters["larg"] / 1000, 5)}', file_data)
-    file_data = re.sub('comp='+float_regex, f'comp={round(parameters["comp"] / 1000, 5)}', file_data)
+    #file_data = re.sub('larg='+float_regex, f'larg={round(parameters["larg"] / 1000, 5)}', file_data)
+    #file_data = re.sub('comp='+float_regex, f'comp={round(parameters["comp"] / 1000, 5)}', file_data)
 
-    file_data = re.sub('densidade= '+float_regex, f'densidade={parameters["rho"]}', file_data)
-    file_data = re.sub('condtermica= '+float_regex, f'condtermica={parameters["cond"]}', file_data)
-    file_data = re.sub('calorespec= '+float_regex, f'calorespec={parameters["cal"]}', file_data)
+    #file_data = re.sub('densidade= '+float_regex, f'densidade={parameters["rho"]}', file_data)
+    #file_data = re.sub('condtermica= '+float_regex, f'condtermica={parameters["cond"]}', file_data)
+    #file_data = re.sub('calorespec= '+float_regex, f'calorespec={parameters["cal"]}', file_data)
 
     token = str(uuid4())
     file_name = f'{token}.txt'
@@ -78,7 +78,7 @@ def save_data(file, simul):
     df = df.astype(np.float32)
     df['id_simulacao'] = simul
 
-    df.to_sql('simulacao_termica2', engine, schema='public',
+    df.to_sql('simulacao_termica_fonte_calor', engine, schema='public',
                 if_exists='append', index=False)
 
 
