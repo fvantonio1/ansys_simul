@@ -32,8 +32,8 @@ def make_file(template, parameters, write_file=False):
     #file_data = re.sub('esp='+float_regex, f'esp={round(parameters["e"] / 1000, 5)}', file_data)
     file_data = re.sub('q='+float_regex, f'q={parameters["q"]}', file_data)
     #file_data = re.sub('tamb='+float_regex, f'tamb={parameters["t0"]}', file_data)
-    file_data = re.sub('sig='+float_regex, f'sig={round(parameters["s"] / 1000, 5)}', file_data)
-    file_data = re.sub('velocidade='+float_regex, f'velocidade={round(parameters["v"] / 6000, 5)}', file_data)
+    file_data = re.sub('sig='+float_regex, f'sig={parameters["s"]}', file_data)
+    file_data = re.sub('velocidade='+float_regex, f'velocidade={parameters["v"]}', file_data)
     #file_data = re.sub('larg='+float_regex, f'larg={round(parameters["larg"] / 1000, 5)}', file_data)
     #file_data = re.sub('comp='+float_regex, f'comp={round(parameters["comp"] / 1000, 5)}', file_data)
 
@@ -54,7 +54,7 @@ def make_file(template, parameters, write_file=False):
 def save_data(file, simul):
     load_dotenv()
     
-    host = os.getenv("HOST")
+    host = os.getenv("POSTGRES_HOST")
     port = os.getenv("POSTGRES_PORT")
     usr = os.getenv("POSTGRES_USER")
     password = os.getenv("POSTGRES_PASSWORD")
